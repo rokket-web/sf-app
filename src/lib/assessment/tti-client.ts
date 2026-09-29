@@ -1,4 +1,4 @@
-import type { TtiReportSummary, TtiRespondent } from "./types";
+import type { TtiFullReport, TtiReportSummary, TtiRespondent } from "./types";
 
 const BASE = process.env.TTI_API_BASE ?? "https://api.ttiadmin.com/api/v3";
 
@@ -58,6 +58,8 @@ export const tti = {
     }
     return found;
   },
+
+  fullReport: (reportId: number) => ttiGet<TtiFullReport>(`/reports/${reportId}`),
 
   reportSummary: (reportId: number) => ttiGet<TtiReportSummary>(`/reports/${reportId}/summary`),
 };

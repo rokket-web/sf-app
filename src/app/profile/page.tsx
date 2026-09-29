@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/drizzle";
@@ -27,6 +28,13 @@ export default async function ProfilePage() {
       <h1 className="text-2xl font-semibold">Your profile</h1>
       <p className="text-sm opacity-70">Signed in as {user.email}</p>
       <ProfileForm profile={profile} />
+
+      <Link
+        href="/results"
+        className="inline-block rounded bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
+      >
+        View my assessment results
+      </Link>
 
       <section className="space-y-2 border-t border-black/10 pt-6 dark:border-white/20">
         <h2 className="text-lg font-medium">Who can see my assessment results</h2>

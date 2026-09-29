@@ -52,6 +52,15 @@ export async function refreshResults(userId: string) {
   const cacheable: Record<string, unknown> = { ...summary };
   delete cacheable.report_pdf_url;
 
+  // The narrative report is best-effort: if it fails, the scores and graphs are still cached.
+  // Only the section content is kept (not respondent names or other info fields).
+  try {
+    const full = await tti.fullReport(respondent.most_recent_report_id);
+    cacheable.report = { sections: full.report.sections };
+  } catch {
+    // leave `report` unset; the results page offers a refresh
+  }
+
   await db
     .insert(assessmentResults)
     .values({ linkId: link.id, data: cacheable, fetchedAt: new Date() })

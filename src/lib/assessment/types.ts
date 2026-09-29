@@ -14,6 +14,7 @@ export type DiscScores = { d: number; i: number; s: number; c: number };
 export type TtiReportSummary = {
   id: number;
   report_date: string;
+  report_pdf_url?: string; // signed and short-lived: never cache
   respondent: { id: number; name: string; respondent_password: string };
   graphs?: Record<string, string>; // e.g. disc_natural, disc_adapted, disc_wheel (SVG URLs)
   scores: {
@@ -25,3 +26,22 @@ export type TtiReportSummary = {
     eq?: Record<string, number>;
   };
 };
+
+// Full narrative report (GET /reports/{id}). Loosely typed: only the section shapes we render are modelled.
+export type TtiReportSection = {
+  type: string;
+  format?: string;
+  header?: { titles?: string[]; text?: string };
+  prefix?: string;
+  statements?: { ident?: string; stmts?: string[] }[];
+  title?: string;
+  wordlists?: { ident?: string; title?: string; prefix?: string; words?: string[] }[];
+  styles?: {
+    title?: string;
+    ident?: string;
+    natural?: { statements?: string[] };
+    adapted?: { statements?: string[] };
+  }[];
+};
+
+export type TtiFullReport = { report: { sections: TtiReportSection[] } };

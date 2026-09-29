@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/drizzle";
 import { assessmentLinks, assessmentResults, resultAccessGrants } from "@/db/schema";
 import { refreshResults } from "./service";
-import type { DiscScores } from "./types";
+import type { DiscScores, TtiReportSection } from "./types";
 
 const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 
@@ -84,4 +84,29 @@ export async function getDiscResults(viewerId: string, ownerId: string): Promise
 
   const disc = cached ? toDiscView(cached.data, cached.fetchedAt) : null;
   return disc ? { status: "ok", disc } : { status: "unavailable", reason: "No DISC results in this report." };
+}
+
+// The narrative report is personal, so it is only ever returned to its owner
+// (comparison views use DISC scores only, which the owner can share per user).
+export async function getMyReportSections(userId: string): Promise<TtiReportSection[] | null> {
+  const link = await db.query.assessmentLinks.findFirst({ where: eq(assessmentLinks.userId, userId) });
+  if (!link) return null;
+
+  const read = async () =>
+    (await db.query.assessmentResults.findFirst({ where: eq(assessmentResults.linkId, link.id) }))?.data as
+      | { report?: { sections?: TtiReportSection[] } }
+      | undefined;
+
+  let data = await read();
+  if (!data?.report?.sections) {
+    // Results cached before the narrative was stored: backfill once.
+    try {
+      await refreshResults(userId);
+      data = await read();
+    } catch {
+      return null;
+    }
+  }
+  const sections = data?.report?.sections;
+  return Array.isArray(sections) ? sections : null;
 }
