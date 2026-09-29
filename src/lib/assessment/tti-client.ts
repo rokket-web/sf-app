@@ -22,7 +22,7 @@ async function ttiGet<T>(path: string, params?: Record<string, string | number>)
   });
 
   if (res.status === 429) throw new TtiError("TTI rate limit reached (100/min). Try again shortly.", 429);
-  if (res.status === 401) throw new TtiError("TTI rejected the API key.", 401);
+  if (res.status === 401) throw new TtiError(`TTI rejected the API key on ${url.host}. Check TTI_API_KEY and TTI_API_BASE.`, 401);
   if (res.status === 404) throw new TtiError("Not found on TTI.", 404);
   if (!res.ok) throw new TtiError(`TTI request failed (${res.status}).`, res.status);
   return (await res.json()) as T;
