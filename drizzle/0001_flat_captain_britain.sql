@@ -1,0 +1,1 @@
+ALTER TABLE "assessment_results" ADD CONSTRAINT "assessment_results_link_id_unique" UNIQUE("link_id");
