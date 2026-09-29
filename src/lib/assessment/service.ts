@@ -10,6 +10,8 @@ export type LinkOutcome =
   | { status: "ambiguous"; candidates: TtiRespondent[] };
 
 async function saveLink(userId: string, passwd: string) {
+  const taken = await db.query.assessmentLinks.findFirst({ where: eq(assessmentLinks.ttiExternalId, passwd) });
+  if (taken && taken.userId !== userId) throw new Error("That TTI respondent is already linked to another user.");
   await db
     .insert(assessmentLinks)
     .values({ userId, ttiExternalId: passwd })

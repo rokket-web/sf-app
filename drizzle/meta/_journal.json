@@ -15,6 +15,13 @@
       "when": 1790714536240,
       "tag": "0001_flat_captain_britain",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790723869762,
+      "tag": "0002_yummy_tarantula",
+      "breakpoints": true
     }
   ]
 }

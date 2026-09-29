@@ -2,12 +2,14 @@
 
 import { useActionState } from "react";
 import {
+  submitTtiUser,
   autoLinkUser,
   manualLinkUser,
   refreshUserResults,
   searchTti,
   unlinkUser,
   type LinkState,
+  type SearchResult,
   type SearchState,
 } from "./actions";
 
@@ -62,11 +64,47 @@ export function UserAssessmentControls({ userId, linkedTo }: { userId: string; l
   );
 }
 
+function AddFromTti({ r }: { r: SearchResult }) {
+  const [state, action, pending] = useActionState<LinkState, FormData>(submitTtiUser, null);
+  const done = state?.ok;
+  return (
+    <form action={action} className="space-y-1">
+      <input type="hidden" name="passwd" value={r.passwd} />
+      {!done && (
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            name="email"
+            type="email"
+            required
+            defaultValue={r.email ?? ""}
+            placeholder="Email"
+            className="w-56 rounded border border-black/20 px-2 py-1 text-xs dark:border-white/30 dark:bg-transparent"
+          />
+          <button name="intent" value="add" className={btn} disabled={pending}>
+            Add to Users
+          </button>
+          <button name="intent" value="invite" className={btn} disabled={pending}>
+            Invite via Email
+          </button>
+          {pending && <span className="text-xs opacity-70">Working…</span>}
+        </div>
+      )}
+      <Msg state={state} />
+    </form>
+  );
+}
+
+const STATUS_LABEL: Record<Exclude<SearchResult["status"], "available">, string> = {
+  user: "Already has an account",
+  linked: "Already linked to a user",
+  invited: "Invitation pending",
+};
+
 export function TtiSearch() {
   const [state, action, pending] = useActionState<SearchState, FormData>(searchTti, null);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <form action={action} className="flex gap-2">
         <input
           name="q"
@@ -79,11 +117,19 @@ export function TtiSearch() {
       </form>
       {state?.message && <p className="text-sm opacity-70">{state.message}</p>}
       {state?.results && (
-        <ul className="divide-y divide-black/10 text-sm dark:divide-white/20">
+        <ul className="divide-y divide-black/10 dark:divide-white/20">
           {state.results.map((r) => (
-            <li key={r.passwd} className="py-1">
-              <span className="font-mono">{r.passwd}</span> — {r.name} · {r.email ?? "no email"}
-              {r.company ? ` · ${r.company}` : ""}
+            <li key={r.passwd} className="space-y-1 py-3">
+              <div className="text-sm">
+                <strong>{r.name || "(no name)"}</strong> · {r.email ?? "no email"}
+                {r.company ? ` · ${r.company}` : ""}
+                <span className="ml-2 font-mono text-xs opacity-60">{r.passwd}</span>
+              </div>
+              {r.status === "available" ? (
+                <AddFromTti r={r} />
+              ) : (
+                <p className="text-xs opacity-70">{STATUS_LABEL[r.status]}</p>
+              )}
             </li>
           ))}
         </ul>

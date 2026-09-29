@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "./drizzle";
-import { profiles, users } from "@/db/schema";
+import { assessmentLinks, profiles, users } from "@/db/schema";
 
 // Returns the signed-in user's app record, creating it (and an empty profile) on first visit.
 export async function getCurrentUser() {
@@ -26,13 +26,24 @@ export async function getCurrentUser() {
     .returning();
   const user = created ?? (await db.query.users.findFirst({ where: eq(users.clerkUserId, userId) }))!;
 
+  // Invitations sent from /admin carry the TTI respondent (set server-side; users can't edit public metadata).
+  const meta = clerkUser.publicMetadata as { ttiRespondentId?: string; displayName?: string };
+
   await db
     .insert(profiles)
     .values({
       userId: user.id,
-      displayName: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || email,
+      displayName:
+        [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || meta.displayName || email,
     })
     .onConflictDoNothing();
+
+  if (typeof meta.ttiRespondentId === "string" && meta.ttiRespondentId) {
+    await db
+      .insert(assessmentLinks)
+      .values({ userId: user.id, ttiExternalId: meta.ttiRespondentId })
+      .onConflictDoNothing();
+  }
 
   return user;
 }

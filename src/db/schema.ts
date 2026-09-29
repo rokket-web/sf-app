@@ -45,7 +45,7 @@ export const profiles = pgTable("profiles", {
 export const assessmentLinks = pgTable("assessment_links", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
-  ttiExternalId: text("tti_external_id").notNull(),
+  ttiExternalId: text("tti_external_id").notNull().unique(),
   createdAt: createdAt(),
 });
 

@@ -1,0 +1,1 @@
+ALTER TABLE "assessment_links" ADD CONSTRAINT "assessment_links_tti_external_id_unique" UNIQUE("tti_external_id");
