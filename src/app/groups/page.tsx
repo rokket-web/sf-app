@@ -19,6 +19,13 @@ export default async function GroupsPage() {
     }),
   ]);
 
+  const mine = new Set(memberships.map((m) => m.groupId));
+  const otherGroups = me.isAdmin
+    ? (await db.query.groups.findMany({ with: { members: true, owner: { with: { profile: true } } } })).filter(
+        (g) => !mine.has(g.id),
+      )
+    : [];
+
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 space-y-8 p-6">
       <h1 className="text-2xl font-semibold">Groups</h1>
@@ -69,6 +76,28 @@ export default async function GroupsPage() {
           </ul>
         )}
       </section>
+
+      {me.isAdmin && (
+        <section className="space-y-2">
+          <h2 className="text-lg font-medium">All other groups (admin)</h2>
+          {otherGroups.length === 0 ? (
+            <p className="opacity-70">No other groups.</p>
+          ) : (
+            <ul className="divide-y divide-black/10 dark:divide-white/20">
+              {otherGroups.map((g) => (
+                <li key={g.id} className="flex items-center justify-between py-3">
+                  <Link href={`/groups/${g.id}`} className="underline">
+                    {g.name}
+                  </Link>
+                  <span className="text-sm opacity-70">
+                    {g.type} · {g.members.length} members · owner {g.owner.profile?.displayName ?? g.owner.email}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-lg font-medium">Create a group</h2>

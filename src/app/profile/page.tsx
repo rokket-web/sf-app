@@ -39,7 +39,7 @@ export default async function ProfilePage() {
       <section className="space-y-2 border-t border-black/10 pt-6 dark:border-white/20">
         <h2 className="text-lg font-medium">Who can see my assessment results</h2>
         <p className="text-sm opacity-70">
-          Only people you add here can compare their results with yours. You can stop sharing at any time.
+          People you add here can view your assessment (scores, graphs and written report) and compare it with theirs. You can also share from a group page. You can stop sharing at any time.
         </p>
         <ShareForm viewers={viewers} />
       </section>

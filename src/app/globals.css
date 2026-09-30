@@ -6,6 +6,13 @@
   /* categorical slots 1-2, validated for light and dark surfaces */
   --series-1: #2a78d6;
   --series-2: #eb6834;
+  /* brief: you / them / strain, each with a soft tint for backgrounds */
+  --you: #5c7a63;
+  --you-tint: #e5ede3;
+  --them: #b4812e;
+  --them-tint: #f3e6cc;
+  --strain: #9a4b45;
+  --strain-tint: #f4e4e2;
 }
 
 @theme inline {
@@ -13,6 +20,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-you: var(--you);
+  --color-you-tint: var(--you-tint);
+  --color-them: var(--them);
+  --color-them-tint: var(--them-tint);
+  --color-strain: var(--strain);
+  --color-strain-tint: var(--strain-tint);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +34,12 @@
     --foreground: #ededed;
     --series-1: #3987e5;
     --series-2: #d95926;
+    --you: #8fb096;
+    --you-tint: #1f2b22;
+    --them: #d9a650;
+    --them-tint: #33291a;
+    --strain: #d4817a;
+    --strain-tint: #33201e;
   }
 }
 
