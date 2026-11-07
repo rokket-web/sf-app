@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/drizzle";
 import { getCurrentUser } from "@/lib/current-user";
-import { getMembership, requireManager, requireOwner } from "@/lib/groups";
+import { getMembership, requireManager } from "@/lib/groups";
 import { groupMembers, groups, invitations, resultAccessGrants, users } from "@/db/schema";
 
 export type GroupState = { ok: boolean; message: string } | null;
@@ -24,6 +24,27 @@ export async function createGroup(_prev: GroupState, fd: FormData): Promise<Grou
   const [group] = await db.insert(groups).values({ name, type, ownerId: me.id }).returning();
   await db.insert(groupMembers).values({ groupId: group.id, userId: me.id, role: "owner" });
   redirect(`/groups/${group.id}`);
+}
+
+export async function updateGroup(_prev: GroupState, fd: FormData): Promise<GroupState> {
+  const me = await getCurrentUser();
+  if (!me) return { ok: false, message: "Not signed in." };
+  const groupId = str(fd, "groupId");
+  try {
+    await requireManager(groupId, me);
+  } catch (e) {
+    return { ok: false, message: (e as Error).message };
+  }
+
+  const name = str(fd, "name").slice(0, 80);
+  const type = str(fd, "type");
+  if (!name) return { ok: false, message: "Group name is required." };
+  if (type !== "work" && type !== "personal") return { ok: false, message: "Choose a group type." };
+
+  await db.update(groups).set({ name, type }).where(eq(groups.id, groupId));
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath("/groups");
+  return { ok: true, message: "Group updated." };
 }
 
 export async function inviteMember(_prev: GroupState, fd: FormData): Promise<GroupState> {
@@ -114,7 +135,7 @@ export async function deleteGroup(fd: FormData) {
   const me = await getCurrentUser();
   if (!me) return;
   const groupId = str(fd, "groupId");
-  await requireOwner(groupId, me.id);
+  await requireManager(groupId, me);
   await db.delete(groups).where(eq(groups.id, groupId));
   redirect("/groups");
 }

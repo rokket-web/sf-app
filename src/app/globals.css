@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Light theme only: dark: utilities apply only under [data-theme="dark"], which nothing sets. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -28,8 +31,9 @@
   --color-strain-tint: var(--strain-tint);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* To restore OS-based dark mode: swap this selector back to @media (prefers-color-scheme: dark) { :root {...} } and delete the custom-variant above. */
+:root[data-theme="dark"] {
+  & {
     --background: #0a0a0a;
     --foreground: #ededed;
     --series-1: #3987e5;

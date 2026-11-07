@@ -5,10 +5,9 @@ import { db } from "@/lib/drizzle";
 import { getCurrentUser } from "@/lib/current-user";
 import { getMembership } from "@/lib/groups";
 import { groups, invitations, resultAccessGrants, users } from "@/db/schema";
-import { AddExistingUserForm, InviteMemberForm } from "../group-forms";
+import { AddExistingUserForm, DeleteGroupForm, EditGroupForm, InviteMemberForm } from "../group-forms";
 import {
   cancelInvitation,
-  deleteGroup,
   leaveGroup,
   removeMember,
   shareWithMember,
@@ -143,6 +142,13 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         </ul>
       </section>
 
+      {canManage && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-medium">Edit group</h2>
+          <EditGroupForm groupId={groupId} name={group.name} type={group.type} />
+        </section>
+      )}
+
       {me.isAdmin && (
         <section className="space-y-3">
           <h2 className="text-lg font-medium">Add an existing user</h2>
@@ -172,11 +178,8 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
       )}
 
       <section className="border-t border-black/10 pt-6 dark:border-white/20">
-        {isOwner ? (
-          <form action={deleteGroup}>
-            <input type="hidden" name="groupId" value={groupId} />
-            <button className="text-sm text-red-600 underline">Delete this group</button>
-          </form>
+        {canManage ? (
+          <DeleteGroupForm groupId={groupId} name={group.name} />
         ) : membership ? (
           <form action={leaveGroup}>
             <input type="hidden" name="groupId" value={groupId} />

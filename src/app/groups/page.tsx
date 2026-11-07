@@ -7,12 +7,32 @@ import { groupMembers, invitations } from "@/db/schema";
 import { CreateGroupForm } from "./group-forms";
 import { respondToInvitation } from "./actions";
 
+type Member = { user: { email: string; profile: { displayName: string | null } | null } };
+
+const firstName = (m: Member) => (m.user.profile?.displayName?.trim().split(/\s+/)[0] || m.user.email.split("@")[0]);
+
+// "3 members" with a hover/focus popup listing members' first names.
+function MemberCount({ members }: { members: Member[] }) {
+  const names = members.map(firstName).sort((a, b) => a.localeCompare(b));
+  return (
+    <span className="group/members relative cursor-help outline-none" tabIndex={0}>
+      {members.length} {members.length === 1 ? "member" : "members"}
+      <span
+        role="tooltip"
+        className="pointer-events-none invisible absolute left-0 top-full z-10 mt-1 w-max max-w-56 rounded border border-black/10 bg-white px-2 py-1 text-xs text-black opacity-100 shadow-md group-hover/members:visible group-focus/members:visible"
+      >
+        {names.join(", ")}
+      </span>
+    </span>
+  );
+}
+
 export default async function GroupsPage() {
   const me = await getCurrentUser();
   if (!me) redirect("/sign-in");
 
   const [memberships, invites] = await Promise.all([
-    db.query.groupMembers.findMany({ where: eq(groupMembers.userId, me.id), with: { group: true } }),
+    db.query.groupMembers.findMany({ where: eq(groupMembers.userId, me.id), with: { group: { with: { members: { with: { user: { with: { profile: true } } } } } } } }),
     db.query.invitations.findMany({
       where: and(eq(invitations.inviteeEmail, me.email.toLowerCase()), eq(invitations.status, "pending")),
       with: { group: true, invitedBy: { with: { profile: true } } },
@@ -21,7 +41,7 @@ export default async function GroupsPage() {
 
   const mine = new Set(memberships.map((m) => m.groupId));
   const otherGroups = me.isAdmin
-    ? (await db.query.groups.findMany({ with: { members: true, owner: { with: { profile: true } } } })).filter(
+    ? (await db.query.groups.findMany({ with: { members: { with: { user: { with: { profile: true } } } }, owner: { with: { profile: true } } } })).filter(
         (g) => !mine.has(g.id),
       )
     : [];
@@ -67,7 +87,8 @@ export default async function GroupsPage() {
               <li key={m.groupId} className="flex items-center justify-between py-3">
                 <Link href={`/groups/${m.groupId}`} className="underline">
                   {m.group.name}
-                </Link>
+                </Link>{" "}
+                <span className="mr-auto pl-1 text-sm text-foreground/70">(<MemberCount members={m.group.members} />)</span>
                 <span className="text-sm opacity-70">
                   {m.group.type} · {m.role}
                 </span>
@@ -89,8 +110,8 @@ export default async function GroupsPage() {
                   <Link href={`/groups/${g.id}`} className="underline">
                     {g.name}
                   </Link>
-                  <span className="text-sm opacity-70">
-                    {g.type} · {g.members.length} members · owner {g.owner.profile?.displayName ?? g.owner.email}
+                  <span className="text-sm text-foreground/70">
+                    {g.type} · <MemberCount members={g.members} /> · owner {g.owner.profile?.displayName ?? g.owner.email}
                   </span>
                 </li>
               ))}
