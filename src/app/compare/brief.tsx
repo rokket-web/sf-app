@@ -1,7 +1,8 @@
 import type { DiscView } from "@/lib/assessment/access";
 import type { TtiReportSection } from "@/lib/assessment/types";
-import { CONTENT_IS_PLACEHOLDER, PAIRING_COPY, STYLE_COPY, adaptationCopy } from "@/lib/brief/content";
-import { SECTORS, adaptationLoad, pairing, styleProfile, type StyleKey, type StyleProfile } from "@/lib/brief/style";
+import { PACE_SUMMARY, adaptationCopy } from "@/lib/brief/content";
+import { CHECKIN_SAFETY_NOTE, adviceFor, profileSummary, sectionLabel, type AdviceSnippet } from "@/lib/brief/advice";
+import { SECTORS, adaptationLoad, pairing, styleProfile, type StyleProfile } from "@/lib/brief/style";
 
 type Person = { name: string; disc: DiscView };
 
@@ -145,10 +146,9 @@ function Track({ markers, left, right }: { markers: { value: number; color: stri
 }
 
 function PaceGap({ you, them, name }: { you: StyleProfile; them: StyleProfile; name: string }) {
-  const copy = PAIRING_COPY[pairing(you, them)];
   return (
     <Section title="Pace gap">
-      <p className="text-[15px]">{copy.summary}</p>
+      <p className="text-[15px]">{PACE_SUMMARY[pairing(you, them)]}</p>
       <Track
         left="Slower"
         right="Faster"
@@ -241,49 +241,30 @@ function Escalation({ sections }: { sections: TtiReportSection[] | null }) {
   );
 }
 
-function Friction({ you, them, name }: { you: StyleProfile; them: StyleProfile; name: string }) {
-  const copy = PAIRING_COPY[pairing(you, them)];
-  const col = (who: string, key: StyleKey) => (
-    <div className="rounded-xl bg-black/5 p-3.5 dark:bg-white/10">
-      <h4 className="text-xs font-bold">
-        {key} ({who})
-      </h4>
-      <div className="mb-1.5 text-xs opacity-70">Potential limitation</div>
-      <p className="text-sm leading-relaxed">{STYLE_COPY[key].limitation}</p>
-    </div>
-  );
+function AdviceCard({ s }: { s: AdviceSnippet }) {
   return (
-    <Section title="Where the friction sits">
-      <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-2">
-        {col("you", you.sector)}
-        {col(firstName(name), them.sector)}
-      </div>
-      <Callout label={copy.label}>{copy.text}</Callout>
-    </Section>
+    <div className="space-y-2 rounded-2xl bg-black/5 p-4 text-[15px] leading-relaxed dark:bg-white/10">
+      {s.hook && <p className="italic opacity-80">{s.hook}</p>}
+      <p>{s.going}</p>
+      <p>
+        <span className="font-bold text-you">Try: </span>
+        {s.try}
+      </p>
+      <p>
+        <span className="font-bold text-strain">Better: </span>
+        {s.instead}
+      </p>
+    </div>
   );
 }
 
-function Tips({ them }: { them: StyleProfile }) {
-  const copy = STYLE_COPY[them.sector];
-  const tips = [
-    ...copy.do.map((text) => ({ text, good: true })),
-    ...copy.dont.map((text) => ({ text, good: false })),
-  ];
+function AdviceSection({ s, title, tone }: { s: AdviceSnippet; title?: string; tone?: "them" }) {
+  const { group, title: label } = sectionLabel(s);
   return (
-    <Section title="Walking in, try this">
-      <ul className="space-y-3">
-        {tips.map((t) => (
-          <li key={t.text} className="flex items-start gap-3 text-[15px] leading-snug">
-            <span
-              aria-label={t.good ? "Do" : "Don't"}
-              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${t.good ? "bg-you-tint text-you" : "bg-strain-tint text-strain"}`}
-            >
-              {t.good ? "✓" : "✕"}
-            </span>
-            {t.text}
-          </li>
-        ))}
-      </ul>
+    <Section title={title ?? label} tone={tone}>
+      {group && <div className="-mt-1 text-xs opacity-70">{group}</div>}
+      <AdviceCard s={s} />
+      {s.id.startsWith("checkin-") && <p className="text-xs leading-relaxed opacity-70">{CHECKIN_SAFETY_NOTE}</p>}
     </Section>
   );
 }
@@ -293,6 +274,10 @@ export function Brief({ you, them, themSections }: { you: Person; them: Person; 
   const y = styleProfile(you.disc.natural);
   const t = styleProfile(them.disc.natural);
   const name = firstName(them.name);
+  const profile = t.sector === "Balanced" ? null : profileSummary(t.sector);
+  const advice = adviceFor(t.sector, y.sector);
+  const checkin = advice.single.find((x) => x.id.startsWith("checkin-"));
+  const talking = advice.single.filter((x) => x !== checkin);
 
   return (
     <article className="mx-auto w-full max-w-md overflow-clip sm:rounded-3xl sm:border sm:border-black/10 sm:dark:border-white/20">
@@ -315,7 +300,11 @@ export function Brief({ you, them, themSections }: { you: Person; them: Person; 
         )}
       </div>
 
-      <p className="px-4 pb-5 text-base leading-relaxed sm:px-5">{STYLE_COPY[t.sector].summary}</p>
+      {profile && (
+        <p className="px-4 pb-5 text-base leading-relaxed sm:px-5">
+          <span className="font-semibold">{profile.tagline}.</span> {profile.traits}
+        </p>
+      )}
 
       <Section title="OXYGEN compass — you & them">
         <Compass you={y} them={t} />
@@ -330,12 +319,25 @@ export function Brief({ you, them, themSections }: { you: Person; them: Person; 
       <PaceGap you={y} them={t} name={them.name} />
       <AdaptationLoadSection person={them} />
       <Escalation sections={themSections} />
-      <Friction you={y} them={t} name={them.name} />
-      <Tips them={t} />
+      {advice.blend && <AdviceSection s={advice.blend} title={`You & ${name}`} />}
+      {talking.map((x) => (
+        <AdviceSection key={x.id} s={x} />
+      ))}
+      {advice.pair.map((x) => (
+        <AdviceSection key={x.id} s={x} />
+      ))}
+      {checkin && <AdviceSection s={checkin} />}
+      {(y.sector === "Balanced" || t.sector === "Balanced") && (
+        <Section title="Conversation advice">
+          <p className="text-[15px]">
+            A balanced profile sits near the centre of the compass, so there is no written pairing advice for it yet.
+          </p>
+        </Section>
+      )}
 
       <footer className="border-t border-black/10 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 text-center text-xs opacity-70 dark:border-white/15">
         Compass position is derived from DISC natural style.
-        {CONTENT_IS_PLACEHOLDER && " Guidance text is draft copy."}
+        {advice.hasDrafts && " Conversation advice is draft language, pending review."}
       </footer>
     </article>
   );
