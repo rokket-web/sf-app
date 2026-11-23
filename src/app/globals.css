@@ -52,3 +52,38 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Loading splash: system light -> black logo on white, system dark -> white logo on black */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  /* hold until 3.9s (0.9s fade-in + 3s hold), then fade out over 0.7s */
+  animation: splash-out 0.7s ease-in-out 3.9s forwards;
+}
+.splash-logo {
+  opacity: 0;
+  animation: splash-in 0.9s ease-out forwards;
+}
+.splash-dark { display: none; }
+@keyframes splash-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes splash-out {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+@media (prefers-color-scheme: dark) {
+  .splash { background: #0a0a0a; }
+  .splash-light { display: none; }
+  .splash-dark { display: block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo { animation-name: splash-fade; transform: none; }
+  @keyframes splash-fade { from { opacity: 0; } to { opacity: 1; } }
+}
