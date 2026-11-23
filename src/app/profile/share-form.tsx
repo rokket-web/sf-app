@@ -18,7 +18,7 @@ export function ShareForm({ viewers }: { viewers: { grantId: string; label: stri
         />
         <button
           disabled={pending}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
+          className="rounded bg-primary px-4 py-2 text-white hover:brightness-110 disabled:opacity-50"
         >
           Share my results
         </button>

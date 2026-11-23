@@ -1,31 +1,40 @@
 import type { TtiReportSection } from "@/lib/assessment/types";
+import { BLUE, PageTitle, ReportPage, headingFont } from "./report-page";
 
-const titleCase = (s: string) =>
-  s
-    .trim()
-    .toLowerCase()
-    .replace(/(^|[\s"(])([a-z])/g, (_, a: string, b: string) => a + b.toUpperCase());
+const strings = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : [];
 
-const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : []);
+const titleOf = (s: TtiReportSection, fallback = "") => (s.header?.titles?.[0] ?? "").trim() || fallback;
 
-function Heading({ children }: { children: string }) {
-  return <h3 className="text-lg font-semibold">{children}</h3>;
+function Intro({ text }: { text?: string }) {
+  return text ? <p className="text-sm italic text-[#333]">{text}</p> : null;
 }
 
-function Section({ section }: { section: TtiReportSection }) {
-  const title = titleCase(section.header?.titles?.[0] ?? "");
+function Bullets({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-3 pl-6 text-sm marker:text-[#00a8e1] [&>li]:list-disc">
+      {items.map((t, i) => (
+        <li key={i}>{t}</li>
+      ))}
+    </ul>
+  );
+}
 
+function Section({ section, name }: { section: TtiReportSection; name: string }) {
   switch (section.type) {
     case "GENCHAR": {
       const paras = (section.statements ?? []).flatMap((s) => strings(s.stmts));
       if (!paras.length) return null;
       return (
-        <section className="space-y-2">
-          <Heading>{title || "Personality insights"}</Heading>
-          {paras.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-        </section>
+        <ReportPage name={name}>
+          <PageTitle>{titleOf(section, "Personality insights")}</PageTitle>
+          <Intro text={section.header?.text} />
+          <div className="space-y-4 text-sm leading-relaxed">
+            {paras.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        </ReportPage>
       );
     }
 
@@ -37,41 +46,45 @@ function Section({ section }: { section: TtiReportSection }) {
       const items = (section.statements ?? []).flatMap((s) => strings(s.stmts));
       if (!items.length) return null;
       return (
-        <section className="space-y-2">
-          <Heading>{title}</Heading>
-          {section.prefix && <p className="text-sm opacity-70">{section.prefix}</p>}
-          <ul className="list-disc space-y-1 pl-6">
-            {items.map((t, i) => (
-              <li key={i}>{t}</li>
-            ))}
-          </ul>
-        </section>
+        <ReportPage name={name}>
+          <PageTitle>{titleOf(section)}</PageTitle>
+          <Intro text={section.header?.text} />
+          {section.prefix && (
+            <p className="text-sm font-bold" style={{ color: BLUE }}>
+              {section.prefix}
+            </p>
+          )}
+          <Bullets items={items} />
+        </ReportPage>
       );
     }
 
     case "PERCEPT": {
       const lists = (section.wordlists ?? []).filter((w) => strings(w.words).length);
       if (!lists.length) return null;
+      // Consecutive lists with the same title (e.g. "OTHERS' PERCEPTION") share one heading.
       return (
-        <section className="space-y-2">
-          <Heading>{title || "Perceptions"}</Heading>
-          {section.header?.text && <p className="text-sm opacity-70">{section.header.text}</p>}
-          <div className="grid gap-4 sm:grid-cols-3">
+        <ReportPage name={name}>
+          <PageTitle>{titleOf(section, "Perceptions")}</PageTitle>
+          <Intro text={section.header?.text} />
+          <div className="space-y-4">
             {lists.map((w, i) => (
-              <div key={i} className="space-y-1 rounded border border-black/10 p-3 dark:border-white/20">
-                <div className="text-sm font-medium">{titleCase(w.title ?? "")}</div>
-                {w.prefix && <div className="text-xs opacity-60">{w.prefix}</div>}
-                <ul className="flex flex-wrap gap-1 pt-1">
+              <div key={i} className="space-y-2">
+                {w.title && w.title !== lists[i - 1]?.title && (
+                  <h3 className={`${headingFont.className} border-b pb-0.5 text-xl font-medium uppercase`} style={{ color: BLUE, borderColor: BLUE }}>
+                    {w.title}
+                  </h3>
+                )}
+                {w.prefix && <p className="text-sm font-bold">{w.prefix}</p>}
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-2 pl-6 text-sm marker:text-[#00a8e1] [&>li]:list-disc">
                   {strings(w.words).map((word) => (
-                    <li key={word} className="rounded bg-black/5 px-2 py-0.5 text-sm dark:bg-white/10">
-                      {word}
-                    </li>
+                    <li key={word}>{word}</li>
                   ))}
                 </ul>
               </div>
             ))}
           </div>
-        </section>
+        </ReportPage>
       );
     }
 
@@ -81,49 +94,51 @@ function Section({ section }: { section: TtiReportSection }) {
       );
       if (!styles.length) return null;
       return (
-        <section className="space-y-3">
-          <Heading>{title || "Core and adapted style"}</Heading>
-          {section.header?.text && <p className="text-sm opacity-70">{section.header.text}</p>}
+        <ReportPage name={name}>
+          <PageTitle>{titleOf(section, "Core and adapted style")}</PageTitle>
+          <Intro text={section.header?.text} />
           <div className="space-y-4">
             {styles.map((s, i) => (
-              <div key={s.ident ?? i} className="space-y-2">
-                <div className="font-medium">{titleCase(s.title ?? "")}</div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {(
-                    [
-                      ["Natural", s.natural, "var(--series-1)"],
-                      ["Adapted", s.adapted, "var(--series-2)"],
-                    ] as const
-                  ).map(([label, block, color]) => (
-                    <div key={label} className="space-y-1 border-l-4 pl-3" style={{ borderColor: color }}>
-                      <div className="text-xs font-medium uppercase tracking-wide opacity-70">{label}</div>
-                      {strings(block?.statements).map((t, j) => (
-                        <p key={j} className="text-sm">
-                          {t}
-                        </p>
-                      ))}
-                    </div>
-                  ))}
+              <div key={s.ident ?? i}>
+                <div
+                  className={`${headingFont.className} grid grid-cols-[1fr_auto_1fr] items-baseline gap-2 border-t pt-1 text-sm font-medium uppercase`}
+                  style={{ color: BLUE, borderColor: BLUE }}
+                >
+                  <span>Core style</span>
+                  <span className="text-center text-base font-bold">{(s.title ?? "").trim()}</span>
+                  <span className="text-right">Adapted style</span>
+                </div>
+                <div className="mt-1 grid grid-cols-2 text-sm leading-snug">
+                  <div className="space-y-2 border-r pr-3" style={{ borderColor: BLUE }}>
+                    {strings(s.natural?.statements).map((t, j) => (
+                      <p key={j}>{t}</p>
+                    ))}
+                  </div>
+                  <div className="space-y-2 pl-3">
+                    {strings(s.adapted?.statements).map((t, j) => (
+                      <p key={j}>{t}</p>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </ReportPage>
       );
     }
 
     default:
-      // TITLE, intro, compass and resources sections are graphics or boilerplate; the PDF has them.
+      // TITLE, OXYGEN_INTRO, OXYGEN_COMPASS and OXYGEN_RESOURCES carry no content: they are rendered as fixed pages.
       return null;
   }
 }
 
-export function ReportSections({ sections }: { sections: TtiReportSection[] }) {
+export function ReportSections({ sections, name }: { sections: TtiReportSection[]; name: string }) {
   return (
-    <div className="space-y-8">
+    <>
       {sections.map((s, i) => (
-        <Section key={`${s.type}-${i}`} section={s} />
+        <Section key={`${s.type}-${i}`} section={s} name={name} />
       ))}
-    </div>
+    </>
   );
 }

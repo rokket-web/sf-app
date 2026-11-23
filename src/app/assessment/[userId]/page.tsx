@@ -49,13 +49,13 @@ export default async function ViewAssessmentPage({ params }: { params: Promise<{
         </Link>
         <h1 className="text-2xl font-semibold">{name}&apos;s assessment</h1>
         <p className="text-sm opacity-70">
-          Shared with you by {name} · last synced {outcome.disc.fetchedAt.toLocaleDateString()}
+          Shared with you by {name} · last synced <span className="data">{outcome.disc.fetchedAt.toLocaleDateString()}</span>
         </p>
         <Link href={`/compare/${userId}`} className="inline-block rounded border border-black/20 px-3 py-1 text-sm dark:border-white/30">
           View comparison with mine
         </Link>
       </div>
-      <AssessmentBody disc={outcome.disc} sections={sections} />
+      <AssessmentBody disc={outcome.disc} sections={sections} name={name} />
     </main>
   );
 }

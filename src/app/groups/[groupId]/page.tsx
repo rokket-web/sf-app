@@ -4,7 +4,12 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/drizzle";
 import { getCurrentUser } from "@/lib/current-user";
 import { getMembership } from "@/lib/groups";
+import { getDiscResults } from "@/lib/assessment/access";
+import { sectorForPosition } from "../../results/compass";
+import { axes, sectorOf } from "@/lib/brief/style";
 import { groups, invitations, resultAccessGrants, users } from "@/db/schema";
+import { GroupTabs } from "../group-tabs";
+import { GroupCompass, type CompassMember } from "../group-compass";
 import { AddExistingUserForm, DeleteGroupForm, EditGroupForm, InviteMemberForm } from "../group-forms";
 import {
   cancelInvitation,
@@ -60,16 +65,28 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         .sort((a, b) => a.label.localeCompare(b.label))
     : [];
 
-  return (
-    <main className="mx-auto w-full max-w-2xl flex-1 space-y-8 p-6">
-      <div>
-        <Link href="/groups" className="text-sm underline">
-          ← Groups
-        </Link>
-        <h1 className="text-2xl font-semibold">{group.name}</h1>
-        <p className="text-sm opacity-70">{group.type === "work" ? "Work group" : "Personal group"}</p>
-      </div>
+  const outcomes = await Promise.all(group.members.map((m) => getDiscResults(me.id, m.userId)));
+  const plotted: CompassMember[] = [];
+  const notShared: string[] = [];
+  group.members.forEach((m, i) => {
+    const o = outcomes[i];
+    const name = m.user.profile?.displayName ?? m.user.email;
+    if (o.status !== "ok") {
+      if (m.userId !== me.id) notShared.push(name);
+      return;
+    }
+    const a = axes(o.disc.natural);
+    plotted.push({
+      id: m.userId,
+      name,
+      isMe: m.userId === me.id,
+      axes: a,
+      sector: sectorForPosition(o.disc.wheelPos.natural) ?? sectorOf(a),
+    });
+  });
 
+  const manage = (
+    <>
       <section className="space-y-2">
         <h2 className="text-lg font-medium">Members ({group.members.length})</h2>
         <ul className="divide-y divide-black/10 dark:divide-white/20">
@@ -187,11 +204,25 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
           </form>
         ) : null}
       </section>
+    </>
+  );
+
+  return (
+    <main className="mx-auto w-full max-w-2xl flex-1 space-y-6 p-6">
+      <div>
+        <Link href="/groups" className="text-sm underline">
+          ← Groups
+        </Link>
+        <h1 className="text-2xl font-semibold">{group.name}</h1>
+        <p className="text-sm opacity-70">{group.type === "work" ? "Work group" : "Personal group"}</p>
+      </div>
+
+      <GroupTabs compass={<GroupCompass groupId={groupId} members={plotted} notShared={notShared} />} manage={manage} />
     </main>
   );
 }
 
-const btnPrimary = "rounded bg-black px-3 py-1 text-sm text-white dark:bg-white dark:text-black";
+const btnPrimary = "rounded bg-primary px-3 py-1 text-sm text-white hover:brightness-110";
 const btnOutline = "rounded border border-black/20 px-3 py-1 text-sm dark:border-white/30";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

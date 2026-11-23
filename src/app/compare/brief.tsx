@@ -2,6 +2,7 @@ import type { DiscView } from "@/lib/assessment/access";
 import type { TtiReportSection } from "@/lib/assessment/types";
 import { PACE_SUMMARY, adaptationCopy } from "@/lib/brief/content";
 import { CHECKIN_SAFETY_NOTE, adviceFor, profileSummary, sectionLabel, type AdviceSnippet } from "@/lib/brief/advice";
+import { sectorForPosition } from "../results/compass";
 import { SECTORS, adaptationLoad, pairing, styleProfile, type StyleProfile } from "@/lib/brief/style";
 
 type Person = { name: string; disc: DiscView };
@@ -34,7 +35,7 @@ function Callout({ label, children, tone = "you" }: { label: string; children: R
 }
 
 // Label positions around the compass, in the 440x340 viewBox. Order matches SECTORS.
-const SECTOR_LABEL_POS: Record<(typeof SECTORS)[number], { x: number; y: number }> = {
+export const SECTOR_LABEL_POS: Record<(typeof SECTORS)[number], { x: number; y: number }> = {
   Efficient: { x: 220, y: 58 },
   Driven: { x: 298, y: 90 },
   Persuasive: { x: 330, y: 170 },
@@ -45,9 +46,9 @@ const SECTOR_LABEL_POS: Record<(typeof SECTORS)[number], { x: number; y: number 
   Accurate: { x: 142, y: 90 },
 };
 
-const CX = 220;
-const CY = 170;
-const R = 120;
+export const CX = 220;
+export const CY = 170;
+export const R = 120;
 
 function Compass({ you, them }: { you: StyleProfile; them: StyleProfile }) {
   const pt = (p: StyleProfile) => ({ x: CX + p.axes.x * R, y: CY - p.axes.y * R });
@@ -185,7 +186,7 @@ function AdaptationLoadSection({ person }: { person: Person }) {
             <th className="text-right font-medium">Change</th>
           </tr>
         </thead>
-        <tbody className="tabular-nums">
+        <tbody className="data">
           {load.factors.map((f) => (
             <tr key={f.key} className="border-t border-black/10 dark:border-white/15">
               <td className="py-2">{f.label}</td>
@@ -271,8 +272,8 @@ function AdviceSection({ s, title, tone }: { s: AdviceSnippet; title?: string; t
 
 // The "walking into a meeting" view: you, them, and where you will rub.
 export function Brief({ you, them, themSections }: { you: Person; them: Person; themSections: TtiReportSection[] | null }) {
-  const y = styleProfile(you.disc.natural);
-  const t = styleProfile(them.disc.natural);
+  const y = styleProfile(you.disc.natural, sectorForPosition(you.disc.wheelPos.natural));
+  const t = styleProfile(them.disc.natural, sectorForPosition(them.disc.wheelPos.natural));
   const name = firstName(them.name);
   const profile = t.sector === "Balanced" ? null : profileSummary(t.sector);
   const advice = adviceFor(t.sector, y.sector);
@@ -287,7 +288,7 @@ export function Brief({ you, them, themSections }: { you: Person; them: Person; 
         </div>
         <div className="min-w-0">
           <h2 className="truncate text-lg font-bold leading-tight">{them.name}</h2>
-          <p className="text-xs opacity-70">Last mapped {them.disc.fetchedAt.toLocaleDateString()}</p>
+          <p className="text-xs opacity-70">Last mapped <span className="data">{them.disc.fetchedAt.toLocaleDateString()}</span></p>
         </div>
       </header>
 

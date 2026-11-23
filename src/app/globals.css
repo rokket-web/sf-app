@@ -4,8 +4,12 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  --background: #ffffff;
+  --background: #f5f9fc;
   --foreground: #171717;
+  /* brand: dark blue is the main colour, light blue the accent (borders, highlights, focus: too light for small text) */
+  --primary: #2f7099;
+  --primary-tint: #e6f0f6;
+  --accent: #00a8e1;
   /* categorical slots 1-2, validated for light and dark surfaces */
   --series-1: #2a78d6;
   --series-2: #eb6834;
@@ -19,10 +23,13 @@
 }
 
 @theme inline {
+  --color-primary: var(--primary);
+  --color-primary-tint: var(--primary-tint);
+  --color-accent: var(--accent);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
   --color-you: var(--you);
   --color-you-tint: var(--you-tint);
   --color-them: var(--them);
@@ -47,10 +54,20 @@
   }
 }
 
+@layer base {
+  /* Data, scores and dates use the mono face so columns and digits line up. */
+  .data { font-family: var(--font-jetbrains-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  a { color: var(--primary); }
+  h1 { color: var(--primary); }
+  ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01"; /* Inter: single-storey a, open digits */
 }
 
 /* Loading splash: system light -> black logo on white, system dark -> white logo on black */

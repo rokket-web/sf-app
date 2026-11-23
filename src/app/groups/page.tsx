@@ -64,7 +64,7 @@ export default async function GroupsPage() {
                 </span>
                 <form action={respondToInvitation} className="flex gap-2">
                   <input type="hidden" name="invitationId" value={i.id} />
-                  <button name="decision" value="accept" className="rounded bg-black px-3 py-1 text-sm text-white dark:bg-white dark:text-black">
+                  <button name="decision" value="accept" className="rounded bg-primary px-3 py-1 text-sm text-white hover:brightness-110">
                     Accept
                   </button>
                   <button name="decision" value="decline" className="rounded border border-black/20 px-3 py-1 text-sm dark:border-white/30">

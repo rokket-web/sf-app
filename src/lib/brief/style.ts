@@ -39,11 +39,13 @@ export type StyleProfile = {
   paceScore: number;
 };
 
-export function styleProfile(scores: DiscScores): StyleProfile {
+// `compassSector` is the person's actual OXYGEN compass point (from TTI's wheel position). When it is known it decides
+// the type, and so which conversation language applies. The DISC-derived sector is only a fallback.
+export function styleProfile(scores: DiscScores, compassSector?: Sector | null): StyleProfile {
   const a = axes(scores);
   return {
     axes: a,
-    sector: sectorOf(a),
+    sector: compassSector ?? sectorOf(a),
     orientation: a.y >= 0 ? "Task-oriented" : "People-oriented",
     pace: a.x >= 0 ? "Faster" : "Slower",
     paceScore: paceScore(a),

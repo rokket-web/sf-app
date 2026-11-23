@@ -35,7 +35,7 @@ function StyleChart({ title, style, you, them }: { title: string; style: "natura
                     style={{ width: `${Math.max(0, Math.min(100, b.value))}%`, background: b.color }}
                   />
                 </div>
-                <span className="w-8 text-right text-sm tabular-nums">{b.value}</span>
+                <span className="data w-8 text-right text-sm">{b.value}</span>
               </div>
             ))}
           </div>

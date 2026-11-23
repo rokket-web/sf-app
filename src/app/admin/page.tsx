@@ -30,7 +30,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             href={`/admin?tab=${t.id}`}
             aria-current={tab === t.id ? "page" : undefined}
             className={`-mb-px border-b-2 px-3 py-2 text-sm ${
-              tab === t.id ? "border-current font-medium" : "border-transparent opacity-60 hover:opacity-100"
+              tab === t.id ? "border-accent text-primary font-medium" : "border-transparent opacity-70 hover:opacity-100"
             }`}
           >
             {t.label}

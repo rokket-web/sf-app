@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { addExistingUser, createGroup, deleteGroup, inviteMember, updateGroup, type GroupState } from "./actions";
 
 const input = "rounded border border-black/20 px-3 py-2 dark:border-white/30 dark:bg-transparent";
-const primary = "rounded bg-black px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black";
+const primary = "rounded bg-primary px-4 py-2 text-white hover:brightness-110 disabled:opacity-50";
 
 export function CreateGroupForm() {
   const [state, action, pending] = useActionState<GroupState, FormData>(createGroup, null);

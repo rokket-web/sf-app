@@ -20,6 +20,8 @@ export type DiscView = {
   natural: DiscScores;
   adapted: DiscScores;
   graphs: { natural?: string; adapted?: string; wheel?: string };
+  // Positions (1-60) on TTI's wheel, read from the wheel graph's query string. Numbers only, never a URL we render.
+  wheelPos: { natural?: number; adapted?: number };
   reportDate: string | null;
   fetchedAt: Date;
 };
@@ -39,6 +41,16 @@ function trustedGraph(url: unknown) {
   }
 }
 
+function wheelPosition(url: unknown, key: "naturalpos" | "adaptedpos") {
+  if (typeof url !== "string") return undefined;
+  try {
+    const n = Number(new URL(url).searchParams.get(key));
+    return Number.isInteger(n) && n >= 1 && n <= 60 ? n : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function toDiscView(data: unknown, fetchedAt: Date): DiscView | null {
   const d = data as { scores?: { disc?: { natural?: unknown; adapted?: unknown } }; graphs?: Record<string, unknown>; report_date?: string };
   const disc = d?.scores?.disc;
@@ -51,6 +63,7 @@ function toDiscView(data: unknown, fetchedAt: Date): DiscView | null {
       adapted: trustedGraph(d.graphs?.disc_adapted),
       wheel: trustedGraph(d.graphs?.disc_wheel),
     },
+    wheelPos: { natural: wheelPosition(d.graphs?.disc_wheel, "naturalpos"), adapted: wheelPosition(d.graphs?.disc_wheel, "adaptedpos") },
     reportDate: d.report_date ?? null,
     fetchedAt,
   };

@@ -31,7 +31,7 @@ export default async function ProfilePage() {
 
       <Link
         href="/results"
-        className="inline-block rounded bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
+        className="inline-block rounded bg-primary px-4 py-2 text-white hover:brightness-110"
       >
         View my assessment results
       </Link>

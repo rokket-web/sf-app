@@ -5,11 +5,21 @@ import { db } from "@/lib/drizzle";
 import { getCurrentUser } from "@/lib/current-user";
 import { getDiscResults, getReportSections } from "@/lib/assessment/access";
 import { profiles } from "@/db/schema";
+import { getMembership } from "@/lib/groups";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { Brief } from "../brief";
 import { DiscCompare } from "../disc-compare";
 
-export default async function ComparePage({ params }: { params: Promise<{ userId: string }> }) {
+export default async function ComparePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ userId: string }>;
+  searchParams: Promise<{ from?: string }>;
+}) {
   const { userId } = await params;
+  const { from } = await searchParams;
   const me = await getCurrentUser();
   if (!me) redirect("/sign-in");
   if (userId === me.id) redirect("/compare");
@@ -22,6 +32,14 @@ export default async function ComparePage({ params }: { params: Promise<{ userId
 
   // Same response for "no such user" and "not shared with you", so existence isn't revealed.
   if (theirs.status === "forbidden") notFound();
+
+  // Opened from a group's compass: offer a way back to that group. Only trusted if the viewer can open that group
+  // and the person being compared is in it; otherwise fall back to the normal breadcrumb.
+  let backGroupId: string | null = null;
+  if (from && UUID.test(from)) {
+    const [mineIn, theirsIn] = await Promise.all([getMembership(from, me.id), getMembership(from, userId)]);
+    if ((mineIn || me.isAdmin) && theirsIn) backGroupId = from;
+  }
 
   const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, userId) });
   const name = profile?.displayName ?? "Them";
@@ -70,13 +88,16 @@ export default async function ComparePage({ params }: { params: Promise<{ userId
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 space-y-4 pb-8 sm:space-y-6 sm:p-6">
       <div className="px-4 pt-1 sm:px-0 sm:pt-0">
-        <Link href="/compare" className="-ml-2 inline-flex min-h-11 items-center px-2 text-sm underline">
-          ← All comparisons
+        <Link
+          href={backGroupId ? `/groups/${backGroupId}` : "/compare"}
+          className="-ml-2 inline-flex min-h-11 items-center px-2 text-sm underline"
+        >
+          {backGroupId ? "← Back to my group" : "← All comparisons"}
         </Link>
         <h1 className={showTitle ? "text-2xl font-semibold" : "sr-only"}>You &amp; {name}</h1>
         {showTitle && theirs.status === "ok" && (
           <p className="text-sm opacity-70">
-            {name}&apos;s results last updated {theirs.disc.fetchedAt.toLocaleDateString()}.
+            {name}&apos;s results last updated <span className="data">{theirs.disc.fetchedAt.toLocaleDateString()}</span>.
           </p>
         )}
       </div>
