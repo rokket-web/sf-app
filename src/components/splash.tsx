@@ -15,9 +15,7 @@ export function Splash() {
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="splash-logo splash-light" src="/logo-light.svg" alt="" width={324} height={35} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="splash-logo splash-dark" src="/logo-white.png" alt="" width={210} height={90} />
+      <img className="splash-logo" src="/logo-white.png" alt="" width={210} height={90} />
     </div>
   );
 }

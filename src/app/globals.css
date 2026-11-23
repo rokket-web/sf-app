@@ -70,7 +70,7 @@ body {
   font-feature-settings: "cv11", "ss01"; /* Inter: single-storey a, open digits */
 }
 
-/* Loading splash: system light -> black logo on white, system dark -> white logo on black */
+/* Loading splash: white logo on the brand dark blue */
 .splash {
   position: fixed;
   inset: 0;
@@ -78,7 +78,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--primary);
   /* hold until 3.9s (0.9s fade-in + 3s hold), then fade out over 0.7s */
   animation: splash-out 0.7s ease-in-out 3.9s forwards;
 }
@@ -86,7 +86,6 @@ body {
   opacity: 0;
   animation: splash-in 0.9s ease-out forwards;
 }
-.splash-dark { display: none; }
 @keyframes splash-in {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
@@ -94,11 +93,6 @@ body {
 @keyframes splash-out {
   from { opacity: 1; }
   to { opacity: 0; visibility: hidden; }
-}
-@media (prefers-color-scheme: dark) {
-  .splash { background: #0a0a0a; }
-  .splash-light { display: none; }
-  .splash-dark { display: block; }
 }
 @media (prefers-reduced-motion: reduce) {
   .splash-logo { animation-name: splash-fade; transform: none; }
