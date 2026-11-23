@@ -46,7 +46,7 @@ export function AssessmentBody({
       ) : (
         <ReportPage name={name}>
           <p className="text-sm">
-            The written report isn&apos;t available right now. Try &ldquo;Refresh from TTI&rdquo;, or open the PDF above.
+            The written report isn&apos;t available right now. Please try again later, or open the PDF above.
           </p>
         </ReportPage>
       )}

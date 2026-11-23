@@ -125,10 +125,10 @@ export function DiscCompare({ you, them }: { you: Person; them: Person }) {
       </details>
 
       <div className="space-y-8">
-        <h2 className="text-lg font-semibold">TTI graphs</h2>
+        <h2 className="text-lg font-semibold">Style graphs</h2>
         <GraphPair title="Natural style" a={you.disc.graphs.natural} b={them.disc.graphs.natural} nameA="You" nameB={them.name} />
         <GraphPair title="Adapted style" a={you.disc.graphs.adapted} b={them.disc.graphs.adapted} nameA="You" nameB={them.name} />
-        <GraphPair title="Success Insights® wheel" a={you.disc.graphs.wheel} b={them.disc.graphs.wheel} nameA="You" nameB={them.name} />
+        <GraphPair title="Style wheel" a={you.disc.graphs.wheel} b={them.disc.graphs.wheel} nameA="You" nameB={them.name} />
       </div>
     </div>
   );

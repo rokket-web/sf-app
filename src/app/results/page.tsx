@@ -21,7 +21,7 @@ export default async function ResultsPage() {
         <h1 className="text-2xl font-semibold">My assessment results</h1>
         <p>
           {outcome.status === "not_linked"
-            ? "Your assessment isn't linked yet. Ask an admin to link your TTI account."
+            ? "Your assessment isn't linked yet. Ask an admin to link your assessment."
             : outcome.status === "unavailable"
               ? `Your results aren't available right now. ${outcome.reason}`
               : "Not available."}
@@ -49,7 +49,7 @@ export default async function ResultsPage() {
           <a href="/api/my-report" target="_blank" rel="noopener" className="rounded bg-primary px-4 py-2 text-sm text-white hover:brightness-110">
             Open full PDF report
           </a>
-          <RefreshButton />
+          {me.isAdmin && <RefreshButton />}
         </div>
       </div>
 

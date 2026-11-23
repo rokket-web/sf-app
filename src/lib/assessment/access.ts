@@ -91,7 +91,9 @@ export async function getDiscResults(viewerId: string, ownerId: string): Promise
       await refreshResults(ownerId);
       cached = await db.query.assessmentResults.findFirst({ where: eq(assessmentResults.linkId, link.id) });
     } catch (e) {
-      if (!cached) return { status: "unavailable", reason: (e as Error).message };
+      // The provider's error text can name the vendor, so it is logged rather than shown to people.
+      console.error("Assessment refresh failed:", (e as Error).message);
+      if (!cached) return { status: "unavailable", reason: "Please try again later." };
     }
   }
 

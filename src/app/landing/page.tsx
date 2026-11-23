@@ -40,7 +40,7 @@ export default async function Landing() {
           <h1 className="text-2xl font-semibold">Welcome</h1>
           <p className="text-sm opacity-80">
             {outcome.status === "not_linked"
-              ? "Your assessment isn't linked yet, so there's no compass to show. Ask an admin to link your TTI account."
+              ? "Your assessment isn't linked yet, so there's no compass to show. Ask an admin to link your assessment."
               : outcome.status === "unavailable"
                 ? `Your compass isn't available right now. ${outcome.reason}`
                 : "Your compass isn't available yet."}

@@ -14,6 +14,7 @@ const COOLDOWN_MS = 10 * 60 * 1000;
 export async function refreshMyResults(): Promise<RefreshState> {
   const me = await getCurrentUser();
   if (!me) return { ok: false, message: "Not signed in." };
+  if (!me.isAdmin) return { ok: false, message: "Only an admin can refresh results." };
 
   // TTI allows 100 requests/min across the whole app, so limit manual refreshes per user.
   const link = await db.query.assessmentLinks.findFirst({ where: eq(assessmentLinks.userId, me.id) });

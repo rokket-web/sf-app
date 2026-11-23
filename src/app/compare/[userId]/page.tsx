@@ -60,7 +60,7 @@ export default async function ComparePage({
     body = (
       <p className="px-4 sm:px-0">
         {mine.status === "not_linked"
-          ? "Your own assessment results aren't linked yet. Ask an admin to link your TTI account."
+          ? "Your own assessment results aren't linked yet. Ask an admin to link your assessment."
           : `Your results aren't available right now. ${mine.status === "unavailable" ? mine.reason : ""}`}
       </p>
     );
